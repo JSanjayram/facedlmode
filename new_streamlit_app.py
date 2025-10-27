@@ -217,77 +217,79 @@ Lightweight CNN:
         st.markdown(f"**Status:** {'🟢 LIVE' if st.session_state.live_detection else '🔴 STOPPED'}")
         
         if st.session_state.live_detection:
-            st.markdown("**🎥 Real-time Video Detection**")
+            st.markdown("**🎥 Live Detection Mode - Take photos continuously**")
             
-            # HTML5 video stream with canvas for real-time detection
-            st.markdown("""
-            <div style="text-align: center;">
-                <video id="video" width="640" height="480" autoplay style="border: 2px solid #4a4a4a; border-radius: 8px;"></video>
-                <canvas id="canvas" width="640" height="480" style="display: none;"></canvas>
-                <div id="results" style="margin-top: 10px; padding: 10px; background: #262730; border-radius: 8px;">
-                    <h4>Detection Results:</h4>
-                    <div id="status">Starting camera...</div>
-                </div>
-            </div>
+            # Create refresh button for manual control
+            col1, col2, col3 = st.columns([1, 1, 1])
+            with col2:
+                if st.button("📸 Capture & Detect", key="capture_btn"):
+                    st.rerun()
             
-            <script>
-            const video = document.getElementById('video');
-            const canvas = document.getElementById('canvas');
-            const ctx = canvas.getContext('2d');
-            const results = document.getElementById('status');
+            # Camera input for live detection
+            camera_image = st.camera_input("📹 Live Camera Feed")
             
-            // Start camera
-            navigator.mediaDevices.getUserMedia({ video: true })
-                .then(stream => {
-                    video.srcObject = stream;
-                    results.innerHTML = '🟢 Camera active - Real-time detection running';
+            if camera_image is not None:
+                # Process immediately
+                image = Image.open(camera_image)
+                if image.mode != 'RGB':
+                    image = image.convert('RGB')
+                
+                with st.spinner("🔍 Detecting masks..."):
+                    processed_img, results = process_image(image, model)
+                
+                # Display results side by side
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.markdown("**📷 Processed Image**")
+                    st.image(processed_img, use_container_width=True)
+                
+                with col2:
+                    st.markdown("**🎯 Detection Results**")
                     
-                    // Capture frames every 2 seconds for processing
-                    setInterval(() => {
-                        ctx.drawImage(video, 0, 0, 640, 480);
-                        const imageData = canvas.toDataURL('image/jpeg');
-                        
-                        // Send frame to Streamlit for processing
-                        fetch('/process_frame', {
-                            method: 'POST',
-                            headers: {'Content-Type': 'application/json'},
-                            body: JSON.stringify({frame: imageData})
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.results && data.results.length > 0) {
-                                let resultText = '';
-                                data.results.forEach((result, i) => {
-                                    const color = result.status === 'With Mask' ? '#00ff00' : '#ff4444';
-                                    resultText += `<div style="color: ${color}; margin: 5px 0;">
-                                        Face ${i+1}: ${result.status} (${result.confidence.toFixed(1)}%)
-                                    </div>`;
-                                });
-                                results.innerHTML = resultText;
-                            } else {
-                                results.innerHTML = '👤 No faces detected';
-                            }
-                        })
-                        .catch(() => {
-                            results.innerHTML = '⚠️ Processing...';
-                        });
-                    }, 2000);
-                })
-                .catch(err => {
-                    results.innerHTML = '❌ Camera access denied. Please allow camera permissions.';
-                });
-            </script>
-            """, unsafe_allow_html=True)
+                    if results:
+                        for i, result in enumerate(results):
+                            status = result['status']
+                            confidence = result['confidence']
+                            
+                            if confidence >= confidence_threshold * 100:
+                                if status == 'With Mask':
+                                    st.markdown(f"""
+                                    <div class="success-result">
+                                        ✅ <strong>MASK DETECTED</strong>
+                                        <span style="float: right;">{confidence:.1f}%</span>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                                else:
+                                    st.markdown(f"""
+                                    <div class="warning-result">
+                                        ⚠️ <strong>NO MASK DETECTED</strong>
+                                        <span style="float: right;">{confidence:.1f}%</span>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                    else:
+                        st.info("👤 No faces detected in the image")
+                
+                # Auto-refresh option
+                st.markdown("---")
+                auto_refresh = st.checkbox("🔄 Auto-refresh every 3 seconds")
+                
+                if auto_refresh:
+                    time.sleep(3)
+                    st.rerun()
+            
+            else:
+                st.info("📸 Click 'Take photo' button above to capture and analyze")
         else:
             st.markdown("""
             <div class="detection-card">
-                <h4>🎥 Real-time Video Detection</h4>
-                <p>Click "Start Live Detection" to begin continuous video stream analysis.</p>
+                <h4>🎥 Live Detection Mode</h4>
+                <p>Click "Start Live Detection" to begin real-time mask detection.</p>
                 <ul>
-                    <li>✅ Live video feed from camera</li>
-                    <li>✅ Real-time face detection</li>
-                    <li>✅ Continuous mask classification</li>
-                    <li>✅ No manual photo capture needed</li>
+                    <li>✅ Camera-based detection</li>
+                    <li>✅ Instant results</li>
+                    <li>✅ Manual or auto-refresh options</li>
+                    <li>✅ Works on all devices</li>
                 </ul>
             </div>
             """, unsafe_allow_html=True)
