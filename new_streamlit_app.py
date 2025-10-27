@@ -428,14 +428,18 @@ Trainable Parameters: 132K
             st.markdown("**Camera Options**")
             camera_option = st.selectbox(
                 "Select Camera Mode",
-                ["Take Photo", "Upload from Device"]
+                ["Live Detection", "Upload from Device"]
             )
         
-        if camera_option == "Take Photo":
-            st.subheader("📸 Camera Capture")
+        if camera_option == "Live Detection":
+            st.subheader("🎥 Live Camera Detection")
             
-            # Browser camera capture
-            camera_image = st.camera_input("Take a photo for mask detection")
+            # Auto-refresh for live detection
+            if st.button("🔄 Refresh Detection", key="refresh_btn"):
+                st.rerun()
+            
+            # Live camera capture
+            camera_image = st.camera_input("Live mask detection", key="live_camera")
             
             if camera_image is not None:
                 # Process the captured image
@@ -443,26 +447,21 @@ Trainable Parameters: 132K
                 if image.mode != 'RGB':
                     image = image.convert('RGB')
                 
+                # Process image immediately
+                with st.spinner("🔍 Analyzing live feed..."):
+                    processed_img, results = process_image(image, model)
+                
                 col1, col2 = st.columns(2)
                 
                 with col1:
-                    st.subheader("Captured Image")
-                    st.image(image, use_column_width=True)
+                    st.subheader("Live Feed")
+                    st.image(processed_img, use_column_width=True)
                 
                 with col2:
-                    st.subheader("Detection Results")
-                    
-                    # Process image
-                    with st.spinner("Analyzing captured image..."):
-                        processed_img, results = process_image(image, model)
-                    
-                    # Display processed image
-                    st.image(processed_img, use_column_width=True)
+                    st.subheader("Live Results")
                     
                     # Display results
                     if results:
-                        st.markdown(f"### Detection Results: {len(results)} face(s) found")
-                        
                         for i, result in enumerate(results):
                             status = result['status']
                             confidence = result['confidence']
@@ -471,21 +470,25 @@ Trainable Parameters: 132K
                                 if status == 'With Mask':
                                     st.markdown(f"""
                                     <div class="success-result">
-                                        <strong>Face {i+1}:</strong> {status} 
+                                        ✅ <strong>MASK DETECTED</strong>
                                         <span style="float: right;">{confidence:.1f}%</span>
                                     </div>
                                     """, unsafe_allow_html=True)
                                 else:
                                     st.markdown(f"""
                                     <div class="warning-result">
-                                        <strong>Face {i+1}:</strong> {status} 
+                                        ⚠️ <strong>NO MASK</strong>
                                         <span style="float: right;">{confidence:.1f}%</span>
                                     </div>
                                     """, unsafe_allow_html=True)
                     else:
-                        st.info("No faces detected in the captured image.")
+                        st.info("👤 No faces detected")
+                
+                # Auto-refresh every 2 seconds
+                time.sleep(0.1)
+                st.rerun()
         
-        else:
+        elif camera_option == "Upload from Device":
             st.subheader("📱 Upload from Device Camera")
             st.markdown("""
             <div class="detection-card">
