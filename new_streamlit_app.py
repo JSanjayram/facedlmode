@@ -81,7 +81,7 @@ def process_image(image, model):
         prediction = model.predict(face_batch, verbose=0)[0][0]
         confidence = prediction if prediction > 0.5 else 1 - prediction
         
-        mask_status = 'With Mask' if prediction > 0.5 else 'Without Mask'
+        mask_status = 'Without Mask' if prediction > 0.5 else 'With Mask'
         color = (0, 255, 0) if prediction > 0.5 else (255, 0, 0)
         
         cv2.rectangle(img_array, (x, y), (x+w, y+h), color, 3)
