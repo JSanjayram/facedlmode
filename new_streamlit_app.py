@@ -217,7 +217,10 @@ Lightweight CNN:
         st.markdown(f"**Status:** {'🟢 LIVE' if st.session_state.live_detection else '🔴 STOPPED'}")
         
         if st.session_state.live_detection:
-            camera_image = st.camera_input("📹 Live Detection Feed", key=f"live_cam_{int(time.time())}")
+            # Continuous detection with auto-refresh
+            st.markdown("**📹 Live Detection Active - Camera will refresh automatically**")
+            
+            camera_image = st.camera_input("Take photo for detection", key=f"live_cam_{int(time.time())}")
             
             if camera_image is not None:
                 image = Image.open(camera_image)
@@ -243,9 +246,10 @@ Lightweight CNN:
                                 st.error(f"⚠️ NO MASK - {confidence:.1f}%")
                     else:
                         st.info("👤 No faces detected")
-                
-                time.sleep(1)
-                st.rerun()
+            
+            # Auto-refresh every 3 seconds for continuous detection
+            time.sleep(3)
+            st.rerun()
         else:
             st.info("Click 'Start Live Detection' to begin real-time mask detection")
 
