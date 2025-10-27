@@ -82,7 +82,7 @@ def process_image(image, model):
         confidence = prediction if prediction > 0.5 else 1 - prediction
         
         mask_status = 'Without Mask' if prediction > 0.5 else 'With Mask'
-        color = (0, 255, 0) if prediction > 0.5 else (255, 0, 0)
+        color = (255, 0, 0) if prediction > 0.5 else (0, 255, 0)
         
         cv2.rectangle(img_array, (x, y), (x+w, y+h), color, 3)
         label = f"{mask_status}: {confidence*100:.1f}%"
