@@ -187,11 +187,19 @@ st.markdown("""
 @st.cache_resource
 def load_model():
     """Load the trained model"""
+    import os
     try:
-        # Load your existing model here
-        model = tf.keras.models.load_model('transfer_face_mask_detector.h5')
+        # Check if model exists
+        model_path = 'transfer_face_mask_detector.h5'
+        if not os.path.exists(model_path):
+            st.error(f"Model file not found at: {os.path.abspath(model_path)}")
+            return None
+        
+        # Load model
+        model = tf.keras.models.load_model(model_path)
         return model
-    except:
+    except Exception as e:
+        st.error(f"Error loading model: {str(e)}")
         return None
 
 def process_image(image, model):
