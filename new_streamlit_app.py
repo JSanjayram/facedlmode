@@ -186,39 +186,16 @@ st.markdown("""
 
 @st.cache_resource
 def load_model():
-    """Load the trained model with TF 2.20 compatibility"""
+    """Load the TensorFlow 2.20 compatible model"""
     import os
     try:
-        # Check if model exists
-        model_path = 'transfer_face_mask_detector.h5'
+        model_path = 'transfer_face_mask_detector_v2.h5'
         if not os.path.exists(model_path):
-            st.error(f"Model file not found at: {os.path.abspath(model_path)}")
+            st.error(f"Model file not found: {model_path}")
             return None
         
-        # Load weights only and rebuild model for TF 2.20 compatibility
-        from tensorflow.keras.applications import MobileNetV2
-        from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Dropout
-        from tensorflow.keras.models import Sequential
-        
-        # Rebuild MobileNetV2 model architecture
-        base_model = MobileNetV2(input_shape=(224, 224, 3), include_top=False, weights='imagenet')
-        base_model.trainable = False
-        
-        model = Sequential([
-            base_model,
-            GlobalAveragePooling2D(),
-            Dense(128, activation='relu'),
-            Dropout(0.5),
-            Dense(1, activation='sigmoid')
-        ])
-        
-        # Try to load weights
-        try:
-            model.load_weights(model_path)
-        except:
-            # If weights don't match, load full model with safe loading
-            model = tf.keras.models.load_model(model_path, compile=False, safe_mode=False)
-        
+        # Load the retrained model (TF 2.20 compatible)
+        model = tf.keras.models.load_model(model_path)
         return model
     except Exception as e:
         st.error(f"Error loading model: {str(e)}")
