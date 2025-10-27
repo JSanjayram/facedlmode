@@ -53,7 +53,7 @@ def load_model():
     """Load the TensorFlow 2.20 compatible model"""
     import os
     try:
-        model_path = 'minimal_mask_detector.h5'
+        model_path = 'working_mask_detector.h5'
         if not os.path.exists(model_path):
             st.error(f"Model file not found: {model_path}")
             return None
@@ -79,21 +79,9 @@ def process_image(image, model):
         face_batch = np.expand_dims(face_normalized, axis=0)
         
         prediction = model.predict(face_batch, verbose=0)[0][0]
+        confidence = prediction if prediction > 0.5 else 1 - prediction
         
-        # Debug: Check actual prediction value
-        print(f"Raw prediction: {prediction}")
-        
-        # Use raw prediction directly
-        if prediction > 0.7:  # Higher threshold
-            mask_status = 'Without Mask'
-            confidence = prediction * 100
-        elif prediction < 0.3:  # Lower threshold  
-            mask_status = 'With Mask'
-            confidence = (1 - prediction) * 100
-        else:
-            # Uncertain prediction
-            mask_status = 'Uncertain'
-            confidence = 50.0
+        mask_status = 'Without Mask' if prediction > 0.5 else 'With Mask'
         color = (255, 0, 0) if prediction > 0.5 else (0, 255, 0)
         
         cv2.rectangle(img_array, (x, y), (x+w, y+h), color, 3)
