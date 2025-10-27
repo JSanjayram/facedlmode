@@ -253,17 +253,17 @@ Lightweight CNN:
                             confidence = result['confidence']
                             
                             if confidence >= confidence_threshold * 100:
-                                if status == 'With Mask':
+                                if status == 'Without Mask':
                                     st.markdown(f"""
-                                    <div class="success-result">
-                                        ✅ <strong>MASK DETECTED</strong>
+                                    <div class="warning-result">
+                                        ⚠️ <strong>NO MASK DETECTED</strong>
                                         <span style="float: right;">{confidence:.1f}%</span>
                                     </div>
                                     """, unsafe_allow_html=True)
                                 else:
                                     st.markdown(f"""
-                                    <div class="warning-result">
-                                        ⚠️ <strong>NO MASK DETECTED</strong>
+                                    <div class="success-result">
+                                        ✅ <strong>MASK DETECTED</strong>
                                         <span style="float: right;">{confidence:.1f}%</span>
                                     </div>
                                     """, unsafe_allow_html=True)
