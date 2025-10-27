@@ -189,7 +189,7 @@ def load_model():
     """Load the TensorFlow 2.20 compatible model"""
     import os
     try:
-        model_path = 'transfer_face_mask_detector_v2.h5'
+        model_path = 'tiny_mask_detector.h5'
         if not os.path.exists(model_path):
             st.error(f"Model file not found: {model_path}")
             return None
@@ -217,7 +217,7 @@ def process_image(image, model):
     for (x, y, w, h) in faces:
         # Extract and preprocess face
         face_roi = img_array[y:y+h, x:x+w]
-        face_resized = cv2.resize(face_roi, (224, 224))  # MobileNetV2 input size
+        face_resized = cv2.resize(face_roi, (64, 64))  # MobileNetV2 input size
         face_normalized = face_resized / 255.0
         face_batch = np.expand_dims(face_normalized, axis=0)
         
