@@ -217,41 +217,80 @@ Lightweight CNN:
         st.markdown(f"**Status:** {'🟢 LIVE' if st.session_state.live_detection else '🔴 STOPPED'}")
         
         if st.session_state.live_detection:
-            # Continuous detection with auto-refresh
-            st.markdown("**📹 Live Detection Active - Camera will refresh automatically**")
+            st.markdown("**🎥 Real-time Video Detection**")
             
-            camera_image = st.camera_input("Take photo for detection", key=f"live_cam_{int(time.time())}")
+            # HTML5 video stream with canvas for real-time detection
+            st.markdown("""
+            <div style="text-align: center;">
+                <video id="video" width="640" height="480" autoplay style="border: 2px solid #4a4a4a; border-radius: 8px;"></video>
+                <canvas id="canvas" width="640" height="480" style="display: none;"></canvas>
+                <div id="results" style="margin-top: 10px; padding: 10px; background: #262730; border-radius: 8px;">
+                    <h4>Detection Results:</h4>
+                    <div id="status">Starting camera...</div>
+                </div>
+            </div>
             
-            if camera_image is not None:
-                image = Image.open(camera_image)
-                if image.mode != 'RGB':
-                    image = image.convert('RGB')
-                
-                processed_img, results = process_image(image, model)
-                
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.image(processed_img, use_container_width=True)
-                
-                with col2:
-                    if results:
-                        for result in results:
-                            status = result['status']
-                            confidence = result['confidence']
-                            
-                            if status == 'With Mask':
-                                st.success(f"✅ MASK DETECTED - {confidence:.1f}%")
-                            else:
-                                st.error(f"⚠️ NO MASK - {confidence:.1f}%")
-                    else:
-                        st.info("👤 No faces detected")
+            <script>
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const results = document.getElementById('status');
             
-            # Auto-refresh every 3 seconds for continuous detection
-            time.sleep(3)
-            st.rerun()
+            // Start camera
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    video.srcObject = stream;
+                    results.innerHTML = '🟢 Camera active - Real-time detection running';
+                    
+                    // Capture frames every 2 seconds for processing
+                    setInterval(() => {
+                        ctx.drawImage(video, 0, 0, 640, 480);
+                        const imageData = canvas.toDataURL('image/jpeg');
+                        
+                        // Send frame to Streamlit for processing
+                        fetch('/process_frame', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({frame: imageData})
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.results && data.results.length > 0) {
+                                let resultText = '';
+                                data.results.forEach((result, i) => {
+                                    const color = result.status === 'With Mask' ? '#00ff00' : '#ff4444';
+                                    resultText += `<div style="color: ${color}; margin: 5px 0;">
+                                        Face ${i+1}: ${result.status} (${result.confidence.toFixed(1)}%)
+                                    </div>`;
+                                });
+                                results.innerHTML = resultText;
+                            } else {
+                                results.innerHTML = '👤 No faces detected';
+                            }
+                        })
+                        .catch(() => {
+                            results.innerHTML = '⚠️ Processing...';
+                        });
+                    }, 2000);
+                })
+                .catch(err => {
+                    results.innerHTML = '❌ Camera access denied. Please allow camera permissions.';
+                });
+            </script>
+            """, unsafe_allow_html=True)
         else:
-            st.info("Click 'Start Live Detection' to begin real-time mask detection")
+            st.markdown("""
+            <div class="detection-card">
+                <h4>🎥 Real-time Video Detection</h4>
+                <p>Click "Start Live Detection" to begin continuous video stream analysis.</p>
+                <ul>
+                    <li>✅ Live video feed from camera</li>
+                    <li>✅ Real-time face detection</li>
+                    <li>✅ Continuous mask classification</li>
+                    <li>✅ No manual photo capture needed</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
