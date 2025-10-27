@@ -186,7 +186,7 @@ st.markdown("""
 
 @st.cache_resource
 def load_model():
-    """Load the trained model"""
+    """Load the trained model with compatibility fixes"""
     import os
     try:
         # Check if model exists
@@ -195,8 +195,12 @@ def load_model():
             st.error(f"Model file not found at: {os.path.abspath(model_path)}")
             return None
         
-        # Load model
-        model = tf.keras.models.load_model(model_path)
+        # Load model with compatibility settings
+        model = tf.keras.models.load_model(
+            model_path,
+            custom_objects=None,
+            compile=False
+        )
         return model
     except Exception as e:
         st.error(f"Error loading model: {str(e)}")
