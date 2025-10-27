@@ -53,7 +53,7 @@ def load_model():
     """Load the TensorFlow 2.20 compatible model"""
     import os
     try:
-        model_path = 'working_mask_detector.h5'
+        model_path = 'minimal_mask_detector.h5'
         if not os.path.exists(model_path):
             st.error(f"Model file not found: {model_path}")
             return None
@@ -78,19 +78,11 @@ def process_image(image, model):
         face_normalized = face_resized / 255.0
         face_batch = np.expand_dims(face_normalized, axis=0)
         
-        # Simple rule-based detection based on face region colors
-        # Check lower half of face for mask-like colors
-        lower_face = face_resized[16:, :, :]
-        avg_color = np.mean(lower_face)
+        prediction = model.predict(face_batch, verbose=0)[0][0]
+        confidence = prediction if prediction > 0.5 else 1 - prediction
         
-        # If lower face is darker (mask-like), predict mask
-        if avg_color < 100:  # Dark colors suggest mask
-            mask_status = 'With Mask'
-            confidence = 85.0
-        else:  # Lighter colors suggest skin
-            mask_status = 'Without Mask' 
-            confidence = 80.0
-        color = (255, 0, 0) if prediction > 0.5 else (0, 255, 0)
+        mask_status = 'Without Mask' if prediction > 0.5 else 'With Mask'
+        color = (0, 255, 0) if prediction > 0.5 else (255, 0, 0)
         
         cv2.rectangle(img_array, (x, y), (x+w, y+h), color, 3)
         label = f"{mask_status}: {confidence*100:.1f}%"
@@ -261,17 +253,17 @@ Lightweight CNN:
                             confidence = result['confidence']
                             
                             if confidence >= confidence_threshold * 100:
-                                if status == 'Without Mask':
+                                if status == 'With Mask':
                                     st.markdown(f"""
-                                    <div class="warning-result">
-                                        ⚠️ <strong>NO MASK DETECTED</strong>
+                                    <div class="success-result">
+                                        ✅ <strong>MASK DETECTED</strong>
                                         <span style="float: right;">{confidence:.1f}%</span>
                                     </div>
                                     """, unsafe_allow_html=True)
                                 else:
                                     st.markdown(f"""
-                                    <div class="success-result">
-                                        ✅ <strong>MASK DETECTED</strong>
+                                    <div class="warning-result">
+                                        ⚠️ <strong>NO MASK DETECTED</strong>
                                         <span style="float: right;">{confidence:.1f}%</span>
                                     </div>
                                     """, unsafe_allow_html=True)
