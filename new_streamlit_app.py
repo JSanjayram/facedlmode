@@ -5,6 +5,9 @@ from PIL import Image
 import tensorflow as tf
 import io
 import requests
+import time
+from streamlit_webrtc import webrtc_streamer, VideoTransformerBase, RTCConfiguration
+import av
 
 # Configure Streamlit page
 st.set_page_config(
@@ -434,59 +437,71 @@ Trainable Parameters: 132K
         if camera_option == "Live Detection":
             st.subheader("🎥 Live Camera Detection")
             
-            # Auto-refresh for live detection
-            if st.button("🔄 Refresh Detection", key="refresh_btn"):
-                st.rerun()
-            
-            # Live camera capture
-            camera_image = st.camera_input("Live mask detection", key="live_camera")
-            
-            if camera_image is not None:
-                # Process the captured image
-                image = Image.open(camera_image)
-                if image.mode != 'RGB':
-                    image = image.convert('RGB')
+            class VideoTransformer(VideoTransformerBase):
+                def __init__(self):
+                    self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
                 
-                # Process image immediately
-                with st.spinner("🔍 Analyzing live feed..."):
-                    processed_img, results = process_image(image, model)
-                
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.subheader("Live Feed")
-                    st.image(processed_img, use_column_width=True)
-                
-                with col2:
-                    st.subheader("Live Results")
+                def transform(self, frame):
+                    img = frame.to_ndarray(format="bgr24")
                     
-                    # Display results
-                    if results:
-                        for i, result in enumerate(results):
-                            status = result['status']
-                            confidence = result['confidence']
+                    # Detect faces
+                    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                    faces = self.face_cascade.detectMultiScale(gray, 1.1, 4)
+                    
+                    for (x, y, w, h) in faces:
+                        # Extract and preprocess face
+                        face_roi = img[y:y+h, x:x+w]
+                        face_resized = cv2.resize(face_roi, (64, 64))
+                        face_normalized = face_resized / 255.0
+                        face_batch = np.expand_dims(face_normalized, axis=0)
+                        
+                        # Predict (simplified for real-time)
+                        try:
+                            prediction = model.predict(face_batch, verbose=0)[0][0]
+                            confidence = prediction if prediction > 0.5 else 1 - prediction
                             
-                            if confidence >= confidence_threshold * 100:
-                                if status == 'With Mask':
-                                    st.markdown(f"""
-                                    <div class="success-result">
-                                        ✅ <strong>MASK DETECTED</strong>
-                                        <span style="float: right;">{confidence:.1f}%</span>
-                                    </div>
-                                    """, unsafe_allow_html=True)
-                                else:
-                                    st.markdown(f"""
-                                    <div class="warning-result">
-                                        ⚠️ <strong>NO MASK</strong>
-                                        <span style="float: right;">{confidence:.1f}%</span>
-                                    </div>
-                                    """, unsafe_allow_html=True)
-                    else:
-                        st.info("👤 No faces detected")
-                
-                # Auto-refresh every 2 seconds
-                time.sleep(0.1)
-                st.rerun()
+                            if confidence >= confidence_threshold:
+                                mask_status = 'With Mask' if prediction > 0.5 else 'Without Mask'
+                                color = (0, 255, 0) if prediction > 0.5 else (0, 0, 255)
+                                
+                                # Draw bounding box
+                                cv2.rectangle(img, (x, y), (x+w, y+h), color, 2)
+                                
+                                # Add label
+                                label = f"{mask_status}: {confidence*100:.1f}%"
+                                cv2.putText(img, label, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+                        except:
+                            # Fallback if model fails
+                            cv2.rectangle(img, (x, y), (x+w, y+h), (255, 255, 0), 2)
+                            cv2.putText(img, "Processing...", (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
+                    
+                    return img
+            
+            # WebRTC configuration
+            RTC_CONFIGURATION = RTCConfiguration(
+                {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
+            )
+            
+            # Start live video stream
+            webrtc_ctx = webrtc_streamer(
+                key="live-mask-detection",
+                video_transformer_factory=VideoTransformer,
+                rtc_configuration=RTC_CONFIGURATION,
+                media_stream_constraints={"video": True, "audio": False},
+                async_processing=True,
+            )
+            
+            st.markdown("""
+            <div class="detection-card">
+                <h4>🎥 Real-time Mask Detection</h4>
+                <p>Click "START" to begin live detection using your camera.</p>
+                <ul>
+                    <li>✅ Real-time face detection</li>
+                    <li>✅ Live mask classification</li>
+                    <li>✅ Instant results overlay</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
         
         elif camera_option == "Upload from Device":
             st.subheader("📱 Upload from Device Camera")
