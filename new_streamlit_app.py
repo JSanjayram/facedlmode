@@ -53,7 +53,7 @@ def load_model():
     """Load the TensorFlow 2.20 compatible model"""
     import os
     try:
-        model_path = 'tiny_mask_detector.h5'
+        model_path = 'trained_tiny_mask_detector.h5'
         if not os.path.exists(model_path):
             st.error(f"Model file not found: {model_path}")
             return None
