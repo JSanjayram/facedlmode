@@ -73,6 +73,9 @@ def main():
         image = image.convert('RGB')
         image_np = np.array(image)
         
+        # Flip image horizontally (camera mirror effect)
+        image_np = cv2.flip(image_np, 1)
+        
         # Process directly without BGR conversion first
         gray = cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY)
         faces = face_cascade.detectMultiScale(gray, 1.1, 4)
@@ -90,7 +93,8 @@ def main():
                 
                 prediction = model.predict(face_batch, verbose=0)[0][0]
                 
-                if prediction > 0.5:
+                # Lower threshold for camera images
+                if prediction > 0.3:
                     label = f"Mask: {prediction:.1%}"
                     color = (0, 255, 0)
                 else:
