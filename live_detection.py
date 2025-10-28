@@ -114,10 +114,10 @@ def main():
         col1, col2 = st.columns(2)
         with col1:
             st.subheader("📸 Captured Image")
-            st.image(image, use_container_width=True)
+            st.image(image, width='stretch')
         with col2:
             st.subheader("🔍 Detection Result")
-            st.image(processed_image, use_container_width=True)
+            st.image(processed_image, width='stretch')
     
     # Image upload option
     st.markdown("---")
@@ -141,10 +141,10 @@ def main():
             col1, col2 = st.columns(2)
             with col1:
                 st.subheader("Original")
-                st.image(image, use_container_width=True)
+                st.image(image, width='stretch')
             with col2:
                 st.subheader("Detection Result")
-                st.image(processed_image, use_container_width=True)
+                st.image(processed_image, width='stretch')
     
     with tab2:
         image_url = st.text_input("Enter image URL")
@@ -165,10 +165,10 @@ def main():
                 col1, col2 = st.columns(2)
                 with col1:
                     st.subheader("Original")
-                    st.image(image, use_container_width=True)
+                    st.image(image, width='stretch')
                 with col2:
                     st.subheader("Detection Result")
-                    st.image(processed_image, use_container_width=True)
+                    st.image(processed_image, width='stretch')
             except:
                 st.error("Invalid URL or unable to load image")
     
