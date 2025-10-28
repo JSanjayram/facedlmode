@@ -1,8 +1,6 @@
-tensorflow-cpu==2.20.0
-streamlit==1.50.0
-opencv-python-headless==4.8.1.78
-streamlit-webrtc==0.63.11
+streamlit
+tensorflow
+opencv-python-headless
 numpy
 Pillow
 requests
-rich
