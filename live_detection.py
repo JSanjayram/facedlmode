@@ -66,10 +66,15 @@ def main():
     # Camera capture section
     st.header("📷 Camera Capture")
     
-    # Camera controls
-    col1, col2 = st.columns([1, 3])
+    # Camera controls with better UI
+    col1, col2, col3 = st.columns([1, 2, 2])
     with col1:
-        camera_enabled = st.checkbox("Enable Camera", value=False)
+        camera_enabled = st.toggle("📹 Camera", value=False)
+    with col2:
+        if camera_enabled:
+            st.success("🟢 Camera Active")
+        else:
+            st.error("🔴 Camera Off")
     
     # Important note
     st.info("📝 **NOTE**: This model only predicts accurate masks, so use only original masks and sometimes requires more clear images for better detection.")
