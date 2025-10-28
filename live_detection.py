@@ -37,8 +37,7 @@ def process_frame(frame, model, face_cascade):
             
             prediction = model.predict(face_batch, verbose=0)[0][0]
             
-            # Debug info
-            st.write(f"Raw prediction: {prediction:.4f}")
+
             
             if prediction > 0.5:
                 label = f"Mask: {prediction:.1%}"
@@ -71,18 +70,18 @@ def main():
     if camera_input is not None:
         # Convert to PIL Image
         image = Image.open(camera_input)
+        
+        # Convert to RGB if needed and ensure correct format
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
+        
         image_np = np.array(image)
         
-        # Debug: Show image info
-        st.write(f"Image shape: {image_np.shape}")
-        st.write(f"Image dtype: {image_np.dtype}")
-        
-        # Convert RGB to BGR for OpenCV (camera_input is RGB)
-        if len(image_np.shape) == 3:
-            image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
+        # Camera input is RGB, convert to BGR for OpenCV processing
+        image_bgr = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
         
         # Process the captured image
-        processed_image = process_frame(image_np, model, face_cascade)
+        processed_image = process_frame(image_bgr, model, face_cascade)
         processed_image = cv2.cvtColor(processed_image, cv2.COLOR_BGR2RGB)
         
         # Display results
