@@ -19,7 +19,9 @@ def load_face_model():
 
 @st.cache_resource
 def load_face_cascade():
-    return cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+    eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_eye.xml')
+    return face_cascade, eye_cascade
 
 def process_frame(frame, model, face_cascade):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -56,7 +58,7 @@ def main():
     st.markdown("**Camera capture and detection system**")
     
     model = load_face_model()
-    face_cascade = load_face_cascade()
+    face_cascade, eye_cascade = load_face_cascade()
     
     if model is None:
         return
@@ -78,8 +80,20 @@ def main():
         
         # Process directly without BGR conversion first
         gray = cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY)
-        # Very aggressive face detection for masked faces
-        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.02, minNeighbors=2, minSize=(20, 20), maxSize=(300, 300))
+        
+        # Try multiple detection methods
+        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.02, minNeighbors=2, minSize=(20, 20))
+        
+        # If no faces, try eye detection to estimate face area
+        if len(faces) == 0:
+            eyes = eye_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=3)
+            if len(eyes) >= 2:
+                # Estimate face from eye positions
+                x_min = min([x for x, y, w, h in eyes])
+                y_min = min([y for x, y, w, h in eyes]) - 30
+                x_max = max([x + w for x, y, w, h in eyes])
+                y_max = max([y + h for x, y, w, h in eyes]) + 60
+                faces = [(x_min, y_min, x_max - x_min, y_max - y_min)]
         
         # Debug: Check if faces detected
         st.write(f"Faces detected: {len(faces)}")
