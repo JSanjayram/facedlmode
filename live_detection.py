@@ -93,8 +93,10 @@ def main():
                 
                 prediction = model.predict(face_batch, verbose=0)[0][0]
                 
-                # Lower threshold for camera images
-                if prediction > 0.3:
+                # Debug: Show prediction value
+                st.write(f"Camera prediction: {prediction:.4f}")
+                
+                if prediction > 0.5:
                     label = f"Mask: {prediction:.1%}"
                     color = (0, 255, 0)
                 else:
