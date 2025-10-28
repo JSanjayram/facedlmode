@@ -54,13 +54,31 @@ def process_frame(frame, model, face_cascade):
     return frame
 
 def main():
-    # Hide Streamlit top bar
+    # Hide all Streamlit UI elements
     st.markdown("""
     <style>
     .stApp > header {
         background-color: transparent;
     }
     .stApp > header[data-testid="stHeader"] {
+        display: none;
+    }
+    #MainMenu {
+        visibility: hidden;
+    }
+    .stDeployButton {
+        display: none;
+    }
+    footer {
+        visibility: hidden;
+    }
+    .stActionButton {
+        visibility: hidden;
+    }
+    [data-testid="stToolbar"] {
+        display: none;
+    }
+    .css-14xtw13.e8zbici0 {
         display: none;
     }
     </style>
