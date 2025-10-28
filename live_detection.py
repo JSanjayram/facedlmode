@@ -80,6 +80,9 @@ def main():
         gray = cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY)
         faces = face_cascade.detectMultiScale(gray, 1.1, 4)
         
+        # Debug: Check if faces detected
+        st.write(f"Faces detected: {len(faces)}")
+        
         processed_image = image_np.copy()
         
         for (x, y, w, h) in faces:
