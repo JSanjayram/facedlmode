@@ -64,7 +64,7 @@ def main():
         return
     
     # Camera capture section
-    st.header("📷 Camera Capture")
+    st.header("Camera Capture")
     
     # Camera controls with better UI
     col1, col2, col3 = st.columns([1, 2, 2])
@@ -77,14 +77,14 @@ def main():
             st.error("🔴 Camera Off")
     
     # Important note
-    st.info("📝 **NOTE**: This model only predicts accurate masks, so use only original masks and sometimes requires more clear images for better detection.")
+    st.info("**NOTE**: This model only predicts accurate masks, so use only original masks and sometimes requires more clear images for better detection.")
     
     # Camera input (only show when enabled)
     if camera_enabled:
         camera_input = st.camera_input("Take a photo for mask detection")
     else:
         camera_input = None
-        st.write("✅ Check 'Enable Camera' to start camera capture")
+        st.write("Check 'Enable Camera' to start camera capture")
     
     if camera_input is not None:
         # Read image exactly like training data
@@ -144,15 +144,15 @@ def main():
         # Display results
         col1, col2 = st.columns(2)
         with col1:
-            st.subheader("📸 Captured Image")
+            st.subheader("Captured Image")
             st.image(image, width='stretch')
         with col2:
-            st.subheader("🔍 Detection Result")
+            st.subheader("Detection Result")
             st.image(processed_image, width='stretch')
     
     # Image upload option
     st.markdown("---")
-    st.header("📸 Image Detection")
+    st.header("Image Detection")
     
     tab1, tab2 = st.tabs(["Upload Image", "Image URL"])
     
@@ -204,7 +204,7 @@ def main():
                 st.error("Invalid URL or unable to load image")
     
     # Sidebar info
-    st.sidebar.header("🎯 Detection Info")
+    st.sidebar.header("Detection Info")
     st.sidebar.success("""
     **Model**: Custom CNN
     **Accuracy**: 95%+
@@ -221,8 +221,8 @@ def main():
     
     st.sidebar.markdown("---")
     st.sidebar.markdown("**🎨 Color Guide:**")
-    st.sidebar.markdown("🟢 **Green Box** = Mask Detected")
-    st.sidebar.markdown("🔴 **Red Box** = No Mask Detected")
+    st.sidebar.markdown("**Green Box** = Mask Detected")
+    st.sidebar.markdown("**Red Box** = No Mask Detected")
 
 if __name__ == "__main__":
     main()
