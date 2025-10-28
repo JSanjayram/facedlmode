@@ -1,6 +1,5 @@
 setuptools>=68.0
 wheel
-setuptools-distutils
 streamlit
 tensorflow
 opencv-python-headless
