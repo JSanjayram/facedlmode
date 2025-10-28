@@ -6,7 +6,7 @@ from PIL import Image
 import io
 import base64
 
-st.set_page_config(page_title="Live Face Mask Detection", page_icon="🎭", layout="wide")
+st.set_page_config(page_title="Face Mask Detection", page_icon="🔍", layout="wide")
 
 @st.cache_resource
 def load_face_model():
