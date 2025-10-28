@@ -78,7 +78,8 @@ def main():
         
         # Process directly without BGR conversion first
         gray = cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY)
-        faces = face_cascade.detectMultiScale(gray, 1.1, 4)
+        # More sensitive face detection for camera images
+        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.05, minNeighbors=3, minSize=(30, 30))
         
         # Debug: Check if faces detected
         st.write(f"Faces detected: {len(faces)}")
