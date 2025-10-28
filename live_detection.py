@@ -19,10 +19,9 @@ def load_face_model():
 
 @st.cache_resource
 def load_face_cascade():
-    face_cascade1 = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-    face_cascade2 = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_alt.xml')
-    face_cascade3 = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_profileface.xml')
-    return face_cascade1, face_cascade2, face_cascade3
+    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+    eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_eye.xml')
+    return face_cascade, eye_cascade
 
 def process_frame(frame, model, face_cascade):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -59,7 +58,7 @@ def main():
     st.markdown("**Camera capture and detection system**")
     
     model = load_face_model()
-    face_cascade1, face_cascade2, face_cascade3 = load_face_cascade()
+    face_cascade, eye_cascade = load_face_cascade()
     
     if model is None:
         return
@@ -71,17 +70,59 @@ def main():
     camera_input = st.camera_input("Take a photo for mask detection")
     
     if camera_input is not None:
-        # Process camera image exactly like upload images
+        # Read image exactly like training data
         image = Image.open(camera_input)
         image = image.convert('RGB')
         image_np = np.array(image)
         
-        # Convert to BGR for OpenCV (same as upload processing)
-        image_bgr = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
+        # Flip image horizontally (camera mirror effect)
+        image_np = cv2.flip(image_np, 1)
         
-        # Use same process_frame function as uploads
-        processed_image = process_frame(image_bgr, model, face_cascade1)
-        processed_image = cv2.cvtColor(processed_image, cv2.COLOR_BGR2RGB)
+        # Process directly without BGR conversion first
+        gray = cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY)
+        
+        # Try multiple detection methods
+        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.02, minNeighbors=2, minSize=(20, 20))
+        
+        # If no faces, try eye detection to estimate face area
+        if len(faces) == 0:
+            eyes = eye_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=3)
+            if len(eyes) >= 2:
+                # Estimate face from eye positions
+                x_min = min([x for x, y, w, h in eyes])
+                y_min = min([y for x, y, w, h in eyes]) - 30
+                x_max = max([x + w for x, y, w, h in eyes])
+                y_max = max([y + h for x, y, w, h in eyes]) + 60
+                faces = [(x_min, y_min, x_max - x_min, y_max - y_min)]
+        
+        # Debug: Check if faces detected
+        st.write(f"Faces detected: {len(faces)}")
+        
+        processed_image = image_np.copy()
+        
+        for (x, y, w, h) in faces:
+            face_roi = image_np[y:y+h, x:x+w]
+            
+            if face_roi.size > 0:
+                # Process exactly like training: RGB input
+                face_resized = cv2.resize(face_roi, (128, 128))
+                face_normalized = face_resized.astype("float32") / 255.0
+                face_batch = np.expand_dims(face_normalized, axis=0)
+                
+                prediction = model.predict(face_batch, verbose=0)[0][0]
+                
+                # Debug: Show prediction value
+                st.write(f"Camera prediction: {prediction:.4f}")
+                
+                if prediction > 0.5:
+                    label = f"Mask: {prediction:.1%}"
+                    color = (0, 255, 0)
+                else:
+                    label = f"No Mask: {1-prediction:.1%}"
+                    color = (255, 0, 0)
+                
+                cv2.rectangle(processed_image, (x, y), (x+w, y+h), color, 2)
+                cv2.putText(processed_image, label, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
         
         # Display results
         col1, col2 = st.columns(2)
