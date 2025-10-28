@@ -29,12 +29,16 @@ def process_frame(frame, model, face_cascade):
         face_roi = frame[y:y+h, x:x+w]
         
         if face_roi.size > 0:
+            # Same preprocessing as training
             face_rgb = cv2.cvtColor(face_roi, cv2.COLOR_BGR2RGB)
             face_resized = cv2.resize(face_rgb, (128, 128))
             face_normalized = face_resized.astype("float32") / 255.0
             face_batch = np.expand_dims(face_normalized, axis=0)
             
             prediction = model.predict(face_batch, verbose=0)[0][0]
+            
+            # Debug info
+            st.write(f"Raw prediction: {prediction:.4f}")
             
             if prediction > 0.5:
                 label = f"Mask: {prediction:.1%}"
@@ -69,7 +73,11 @@ def main():
         image = Image.open(camera_input)
         image_np = np.array(image)
         
-        # Convert RGB to BGR for OpenCV
+        # Debug: Show image info
+        st.write(f"Image shape: {image_np.shape}")
+        st.write(f"Image dtype: {image_np.dtype}")
+        
+        # Convert RGB to BGR for OpenCV (camera_input is RGB)
         if len(image_np.shape) == 3:
             image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
         
@@ -81,10 +89,10 @@ def main():
         col1, col2 = st.columns(2)
         with col1:
             st.subheader("📸 Captured Image")
-            st.image(image, use_column_width=True)
+            st.image(image, use_container_width=True)
         with col2:
             st.subheader("🔍 Detection Result")
-            st.image(processed_image, use_column_width=True)
+            st.image(processed_image, use_container_width=True)
     
     # Image upload option
     st.markdown("---")
@@ -108,10 +116,10 @@ def main():
             col1, col2 = st.columns(2)
             with col1:
                 st.subheader("Original")
-                st.image(image, use_column_width=True)
+                st.image(image, use_container_width=True)
             with col2:
                 st.subheader("Detection Result")
-                st.image(processed_image, use_column_width=True)
+                st.image(processed_image, use_container_width=True)
     
     with tab2:
         image_url = st.text_input("Enter image URL")
@@ -132,10 +140,10 @@ def main():
                 col1, col2 = st.columns(2)
                 with col1:
                     st.subheader("Original")
-                    st.image(image, use_column_width=True)
+                    st.image(image, use_container_width=True)
                 with col2:
                     st.subheader("Detection Result")
-                    st.image(processed_image, use_column_width=True)
+                    st.image(processed_image, use_container_width=True)
             except:
                 st.error("Invalid URL or unable to load image")
     
