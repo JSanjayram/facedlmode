@@ -66,8 +66,20 @@ def main():
     # Camera capture section
     st.header("📷 Camera Capture")
     
-    # JavaScript camera capture
-    camera_input = st.camera_input("Take a photo for mask detection")
+    # Camera controls
+    col1, col2 = st.columns([1, 3])
+    with col1:
+        camera_enabled = st.checkbox("Enable Camera", value=False)
+    
+    # Important note
+    st.info("📝 **NOTE**: This model only predicts accurate masks, so use only original masks and sometimes requires more clear images for better detection.")
+    
+    # Camera input (only show when enabled)
+    if camera_enabled:
+        camera_input = st.camera_input("Take a photo for mask detection")
+    else:
+        camera_input = None
+        st.write("✅ Check 'Enable Camera' to start camera capture")
     
     if camera_input is not None:
         # Read image exactly like training data
