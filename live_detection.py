@@ -71,67 +71,17 @@ def main():
     camera_input = st.camera_input("Take a photo for mask detection")
     
     if camera_input is not None:
-        # Read image exactly like training data
+        # Process camera image exactly like upload images
         image = Image.open(camera_input)
         image = image.convert('RGB')
         image_np = np.array(image)
         
-        # Flip image horizontally (camera mirror effect)
-        image_np = cv2.flip(image_np, 1)
+        # Convert to BGR for OpenCV (same as upload processing)
+        image_bgr = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
         
-        # Process directly without BGR conversion first
-        gray = cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY)
-        
-        # Try multiple face detection cascades
-        faces = []
-        
-        # Method 1: Default cascade
-        faces1 = face_cascade1.detectMultiScale(gray, scaleFactor=1.05, minNeighbors=3, minSize=(30, 30))
-        faces.extend(faces1)
-        
-        # Method 2: Alternative cascade
-        faces2 = face_cascade2.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=4, minSize=(25, 25))
-        faces.extend(faces2)
-        
-        # Method 3: Profile cascade
-        faces3 = face_cascade3.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=3, minSize=(30, 30))
-        faces.extend(faces3)
-        
-        # If still no faces, use center region as fallback
-        if len(faces) == 0:
-            h, w = gray.shape
-            center_x, center_y = w//2, h//2
-            face_size = min(w, h) // 3
-            faces = [(center_x - face_size//2, center_y - face_size//2, face_size, face_size)]
-        
-        # Debug: Check if faces detected
-        st.write(f"Faces detected: {len(faces)}")
-        
-        processed_image = image_np.copy()
-        
-        for (x, y, w, h) in faces:
-            face_roi = image_np[y:y+h, x:x+w]
-            
-            if face_roi.size > 0:
-                # Process exactly like training: RGB input
-                face_resized = cv2.resize(face_roi, (128, 128))
-                face_normalized = face_resized.astype("float32") / 255.0
-                face_batch = np.expand_dims(face_normalized, axis=0)
-                
-                prediction = model.predict(face_batch, verbose=0)[0][0]
-                
-                # Debug: Show prediction value
-                st.write(f"Camera prediction: {prediction:.4f}")
-                
-                if prediction > 0.5:
-                    label = f"Mask: {prediction:.1%}"
-                    color = (0, 255, 0)
-                else:
-                    label = f"No Mask: {1-prediction:.1%}"
-                    color = (255, 0, 0)
-                
-                cv2.rectangle(processed_image, (x, y), (x+w, y+h), color, 2)
-                cv2.putText(processed_image, label, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+        # Use same process_frame function as uploads
+        processed_image = process_frame(image_bgr, model, face_cascade1)
+        processed_image = cv2.cvtColor(processed_image, cv2.COLOR_BGR2RGB)
         
         # Display results
         col1, col2 = st.columns(2)
