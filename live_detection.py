@@ -79,16 +79,30 @@ def main():
         # Flip image horizontally (camera mirror effect)
         image_np = cv2.flip(image_np, 1)
         
-        # Simple approach: use entire image for mask detection
-        h, w = image_np.shape[:2]
-        
-        # Try basic face detection first
+        # Process directly without BGR conversion first
         gray = cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY)
-        faces = face_cascade1.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=4, minSize=(50, 50))
         
-        # If no faces detected, use entire image
+        # Try multiple face detection cascades
+        faces = []
+        
+        # Method 1: Default cascade
+        faces1 = face_cascade1.detectMultiScale(gray, scaleFactor=1.05, minNeighbors=3, minSize=(30, 30))
+        faces.extend(faces1)
+        
+        # Method 2: Alternative cascade
+        faces2 = face_cascade2.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=4, minSize=(25, 25))
+        faces.extend(faces2)
+        
+        # Method 3: Profile cascade
+        faces3 = face_cascade3.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=3, minSize=(30, 30))
+        faces.extend(faces3)
+        
+        # If still no faces, use center region as fallback
         if len(faces) == 0:
-            faces = [(0, 0, w, h)]
+            h, w = gray.shape
+            center_x, center_y = w//2, h//2
+            face_size = min(w, h) // 3
+            faces = [(center_x - face_size//2, center_y - face_size//2, face_size, face_size)]
         
         # Debug: Check if faces detected
         st.write(f"Faces detected: {len(faces)}")
