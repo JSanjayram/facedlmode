@@ -6,7 +6,7 @@ from PIL import Image
 import io
 import base64
 
-st.set_page_config(page_title="Face Mask Detection", page_icon="🔍", layout="wide")
+st.set_page_config(page_title="Face Mask Detection", layout="wide")
 
 @st.cache_resource
 def load_face_model():
@@ -54,8 +54,20 @@ def process_frame(frame, model, face_cascade):
     return frame
 
 def main():
-    st.title("🎭 Face Mask Detection")
-    st.markdown("**Camera capture and detection system**")
+    # Hide Streamlit top bar
+    st.markdown("""
+    <style>
+    .stApp > header {
+        background-color: transparent;
+    }
+    .stApp > header[data-testid="stHeader"] {
+        display: none;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("<h1 style='text-align: center;'>Face Mask Detection</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center;'><strong>Camera capture and detection system</strong></p>", unsafe_allow_html=True)
     
     model = load_face_model()
     face_cascade, eye_cascade = load_face_cascade()
