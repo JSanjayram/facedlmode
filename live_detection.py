@@ -68,21 +68,37 @@ def main():
     camera_input = st.camera_input("Take a photo for mask detection")
     
     if camera_input is not None:
-        # Convert to PIL Image
+        # Read image exactly like training data
         image = Image.open(camera_input)
-        
-        # Convert to RGB if needed and ensure correct format
-        if image.mode != 'RGB':
-            image = image.convert('RGB')
-        
+        image = image.convert('RGB')
         image_np = np.array(image)
         
-        # Camera input is RGB, convert to BGR for OpenCV processing
-        image_bgr = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
+        # Process directly without BGR conversion first
+        gray = cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY)
+        faces = face_cascade.detectMultiScale(gray, 1.1, 4)
         
-        # Process the captured image
-        processed_image = process_frame(image_bgr, model, face_cascade)
-        processed_image = cv2.cvtColor(processed_image, cv2.COLOR_BGR2RGB)
+        processed_image = image_np.copy()
+        
+        for (x, y, w, h) in faces:
+            face_roi = image_np[y:y+h, x:x+w]
+            
+            if face_roi.size > 0:
+                # Process exactly like training: RGB input
+                face_resized = cv2.resize(face_roi, (128, 128))
+                face_normalized = face_resized.astype("float32") / 255.0
+                face_batch = np.expand_dims(face_normalized, axis=0)
+                
+                prediction = model.predict(face_batch, verbose=0)[0][0]
+                
+                if prediction > 0.5:
+                    label = f"Mask: {prediction:.1%}"
+                    color = (0, 255, 0)
+                else:
+                    label = f"No Mask: {1-prediction:.1%}"
+                    color = (255, 0, 0)
+                
+                cv2.rectangle(processed_image, (x, y), (x+w, y+h), color, 2)
+                cv2.putText(processed_image, label, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
         
         # Display results
         col1, col2 = st.columns(2)
