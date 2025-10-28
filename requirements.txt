@@ -1,10 +1,8 @@
-setuptools>=68.0
-wheel
+tensorflow-cpu==2.20.0
 streamlit==1.50.0
-tensorflow-cpu>=2.20.0
-opencv-python-headless
+opencv-python-headless==4.8.1.78
+av==10.0.0
+streamlit-webrtc==0.63.11
 numpy
 Pillow
 requests
-streamlit-webrtc
-av
