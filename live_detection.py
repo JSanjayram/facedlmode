@@ -53,6 +53,16 @@ def process_frame(frame, model, face_cascade):
     
     return frame
 
+def resize_image_to_standard(image, standard_size=(400, 400)):
+    """Resize image to standard size while maintaining aspect ratio"""
+    if isinstance(image, np.ndarray):
+        image = Image.fromarray(image)
+    image.thumbnail(standard_size, Image.Resampling.LANCZOS)
+    new_image = Image.new("RGB", standard_size, (255, 255, 255))
+    new_image.paste(image, ((standard_size[0] - image.size[0]) // 2,
+                           (standard_size[1] - image.size[1]) // 2))
+    return new_image
+
 def main():
     # Hide all Streamlit UI elements
     st.markdown("""
@@ -175,10 +185,12 @@ def main():
         col1, col2 = st.columns(2)
         with col1:
             st.subheader("Captured Image")
-            st.image(image, width='stretch')
+            resized_original = resize_image_to_standard(image)
+            st.image(resized_original, width=400)
         with col2:
             st.subheader("Detection Result")
-            st.image(processed_image, width='stretch')
+            resized_processed = resize_image_to_standard(Image.fromarray(processed_image))
+            st.image(resized_processed, width=400)
     
     # Image upload option
     st.markdown("---")
@@ -208,7 +220,8 @@ def main():
                         try:
                             import requests
                             image = Image.open(requests.get(url, stream=True).raw)
-                            st.image(image, caption=name, use_column_width=True)
+                            resized_image = resize_image_to_standard(image)
+                            st.image(resized_image, caption=name, width=400)
                             
                             if st.button(f"Test {name}", key=f"sample_{i+j}", use_container_width=True):
                                 image_np = np.array(image)
@@ -222,10 +235,11 @@ def main():
                                 col1, col2 = st.columns(2)
                                 with col1:
                                     st.subheader("Original")
-                                    st.image(image, use_column_width=True)
+                                    st.image(resized_image, width=400)
                                 with col2:
                                     st.subheader("Detection Result")
-                                    st.image(processed_image, use_column_width=True)
+                                    processed_resized = resize_image_to_standard(Image.fromarray(processed_image))
+                                    st.image(processed_resized, width=400)
                         except:
                             st.error(f"Failed to load {name}")
     
@@ -245,10 +259,12 @@ def main():
             col1, col2 = st.columns(2)
             with col1:
                 st.subheader("Original")
-                st.image(image, width='stretch')
+                resized_original = resize_image_to_standard(image)
+                st.image(resized_original, width=400)
             with col2:
                 st.subheader("Detection Result")
-                st.image(processed_image, width='stretch')
+                resized_processed = resize_image_to_standard(Image.fromarray(processed_image))
+                st.image(resized_processed, width=400)
     
     with tab3:
         image_url = st.text_input("Enter image URL")
@@ -269,10 +285,12 @@ def main():
                 col1, col2 = st.columns(2)
                 with col1:
                     st.subheader("Original")
-                    st.image(image, width='stretch')
+                    resized_original = resize_image_to_standard(image)
+                    st.image(resized_original, width=400)
                 with col2:
                     st.subheader("Detection Result")
-                    st.image(processed_image, width='stretch')
+                    resized_processed = resize_image_to_standard(Image.fromarray(processed_image))
+                    st.image(resized_processed, width=400)
             except:
                 st.error("Invalid URL or unable to load image")
     
