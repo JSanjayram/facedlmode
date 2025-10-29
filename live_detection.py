@@ -184,9 +184,56 @@ def main():
     st.markdown("---")
     st.header("Image Detection")
     
-    tab1, tab2 = st.tabs(["Upload Image", "Image URL"])
+    tab1, tab2, tab3 = st.tabs(["Sample Images", "Upload Image", "Image URL"])
     
     with tab1:
+        st.subheader("Test with Sample Images")
+        
+        # Sample mask detection images
+        sample_images = {
+            "Person with Mask 1": "https://images.unsplash.com/photo-1584634731339-252c581abfc5?w=400&h=400&fit=crop",
+            "Person with Mask 2": "https://images.unsplash.com/photo-1586942593568-29361efcd571?w=400&h=400&fit=crop",
+            "Person with Mask 3": "https://images.unsplash.com/photo-1587814310496-245633e05ec5?w=400&h=400&fit=crop",
+            "Person without Mask 1": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
+            "Person without Mask 2": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop",
+            "Person without Mask 3": "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=400&h=400&fit=crop",
+            "Group with Masks": "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=400&h=400&fit=crop",
+            "Group without Masks": "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=400&fit=crop"
+        }
+        
+        # Create rows with 2 images each
+        for i in range(0, len(sample_images), 2):
+            cols = st.columns(2)
+            
+            for j in range(2):
+                if i + j < len(sample_images):
+                    name, url = list(sample_images.items())[i + j]
+                    with cols[j]:
+                        try:
+                            import requests
+                            image = Image.open(requests.get(url, stream=True).raw)
+                            st.image(image, caption=name, use_column_width=True)
+                            
+                            if st.button(f"Test {name}", key=f"sample_{i+j}", use_container_width=True):
+                                image_np = np.array(image)
+                                if len(image_np.shape) == 3:
+                                    image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
+                                
+                                processed_image = process_frame(image_np, model, face_cascade)
+                                processed_image = cv2.cvtColor(processed_image, cv2.COLOR_BGR2RGB)
+                                
+                                st.markdown("---")
+                                col1, col2 = st.columns(2)
+                                with col1:
+                                    st.subheader("Original")
+                                    st.image(image, use_column_width=True)
+                                with col2:
+                                    st.subheader("Detection Result")
+                                    st.image(processed_image, use_column_width=True)
+                        except:
+                            st.error(f"Failed to load {name}")
+    
+    with tab2:
         uploaded_file = st.file_uploader("Choose an image", type=['jpg', 'jpeg', 'png'])
         
         if uploaded_file is not None:
@@ -207,7 +254,7 @@ def main():
                 st.subheader("Detection Result")
                 st.image(processed_image, width='stretch')
     
-    with tab2:
+    with tab3:
         image_url = st.text_input("Enter image URL")
         
         if image_url:
