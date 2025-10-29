@@ -61,9 +61,60 @@ def main():
     
     # Sidebar
     st.sidebar.header("Detection Options")
-    mode = st.sidebar.selectbox("Choose Mode", ["Image Upload", "Video Upload", "Batch Processing"])
+    mode = st.sidebar.selectbox("Choose Mode", ["Sample Images", "Image Upload", "Video Upload", "Batch Processing"])
     
-    if mode == "Image Upload":
+    if mode == "Sample Images":
+        st.header("🖼️ Sample Images for Testing")
+        
+        # Sample mask detection images
+        sample_images = {
+            "Person with Mask": "https://images.unsplash.com/photo-1584634731339-252c581abfc5?w=400&h=400&fit=crop",
+            "Person without Mask": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
+            "Group with Mixed Masks": "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=400&h=400&fit=crop"
+        }
+        
+        st.markdown("**Click on any image to test mask detection:**")
+        
+        # Create 3 images per row
+        cols = st.columns(3)
+        
+        for idx, (name, url) in enumerate(sample_images.items()):
+            with cols[idx]:
+                try:
+                    import requests
+                    response = requests.get(url)
+                    image = Image.open(requests.get(url, stream=True).raw)
+                    
+                    st.image(image, caption=name, use_column_width=True)
+                    
+                    if st.button(f"Test {name}", key=f"test_{idx}", use_container_width=True):
+                        st.session_state.selected_sample = name
+                        st.session_state.selected_sample_image = np.array(image)
+                except:
+                    st.error(f"Failed to load {name}")
+        
+        # Show detection results for selected sample
+        if hasattr(st.session_state, 'selected_sample'):
+            st.markdown("---")
+            st.subheader(f"Detection Result for {st.session_state.selected_sample}")
+            
+            image_np = st.session_state.selected_sample_image
+            if len(image_np.shape) == 3:
+                image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
+            
+            processed_image = process_frame(image_np, model, face_cascade)
+            processed_image = cv2.cvtColor(processed_image, cv2.COLOR_BGR2RGB)
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.subheader("Original Image")
+                original_img = Image.fromarray(st.session_state.selected_sample_image)
+                st.image(original_img, use_column_width=True)
+            with col2:
+                st.subheader("Detection Result")
+                st.image(processed_image, use_column_width=True)
+    
+    elif mode == "Image Upload":
         st.header("📸 Single Image Detection")
         
         uploaded_file = st.file_uploader("Upload an image", type=['jpg', 'jpeg', 'png'])
