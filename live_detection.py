@@ -193,8 +193,8 @@ def main():
         sample_images = {
             "Person with Mask 1": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTWwQ6jE_EqlxcRKiul8gW4U_LJ6kqBNtPNuQ&s",
             "Person with Mask 2": "https://sabimages.com/wp-content/uploads/2024/08/mask-girl-pic2.jpg",
-           "Person without Mask 1": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-           "Person without Mask 3": "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=400&h=400&fit=crop",
+           "Person without Mask 1": "https://i.pinimg.com/474x/91/2f/30/912f3000d0908eb760d10425d1bd93c6.jpg",
+           "Person without Mask 2": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTJQ16NV6SQSO7gtDmnpMfB0bXqr2tTNHunPQ&s",
            }
         
         # Create rows with 2 images each
