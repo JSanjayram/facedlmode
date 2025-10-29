@@ -5,6 +5,7 @@ from tensorflow.keras.models import load_model
 from PIL import Image
 import io
 import base64
+import requests  # Add this import
 
 st.set_page_config(page_title="Face Mask Detection", layout="wide")
 
@@ -223,15 +224,15 @@ def main():
     with tab1:
         st.subheader("Test with Sample Images")
         
-        # Sample mask detection images
+        # Sample mask detection images with more reliable URLs
         sample_images = {
-            "Person with Mask 1": "https://www.cdc.gov/coronavirus/2019-ncov/images/mask-emoji.jpg",
-            "Person with Mask 2": "https://www.cdc.gov/coronavirus/2019-ncov/images/mask-people.jpg",
-            "Person without Mask 1": "https://media.istockphoto.com/id/1288103838/photo/young-man-photographed-for-identity-card.jpg",
-            "Person without Mask 2": "https://media.istockphoto.com/id/1288103838/photo/young-man-photographed-for-identity-card.jpg"
+            "Person with Mask 1": "https://raw.githubusercontent.com/opencv/opencv/master/samples/data/face.jpg",
+            "Person with Mask 2": "https://raw.githubusercontent.com/opencv/opencv/master/samples/data/messi5.jpg",
+            "Person without Mask 1": "https://raw.githubusercontent.com/opencv/opencv/master/samples/data/lena.jpg",
+            "Person without Mask 2": "https://raw.githubusercontent.com/opencv/opencv/master/samples/data/fruits.jpg"
         }
         
-        # Update image loading with better error handling
+        # Create rows with 2 images each
         for i in range(0, len(sample_images), 2):
             cols = st.columns(2)
             
@@ -244,7 +245,7 @@ def main():
                             if response.status_code == 200:
                                 image = Image.open(io.BytesIO(response.content))
                                 resized_image = resize_image_to_standard(image)
-                                st.image(resized_image, caption=name, use_column_width=True)
+                                st.image(resized_image, caption=name, width=400)
                                 
                                 if st.button(f"Test {name}", key=f"sample_{i+j}", use_container_width=True):
                                     image_np = np.array(image)
