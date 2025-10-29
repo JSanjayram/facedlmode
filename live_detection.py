@@ -191,15 +191,11 @@ def main():
         
         # Sample mask detection images
         sample_images = {
-            "Person with Mask 1": "https://images.unsplash.com/photo-1584634731339-252c581abfc5?w=400&h=400&fit=crop",
-            "Person with Mask 2": "https://images.unsplash.com/photo-1586942593568-29361efcd571?w=400&h=400&fit=crop",
-            "Person with Mask 3": "https://images.unsplash.com/photo-1587814310496-245633e05ec5?w=400&h=400&fit=crop",
-            "Person without Mask 1": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
-            "Person without Mask 2": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop",
-            "Person without Mask 3": "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=400&h=400&fit=crop",
-            "Group with Masks": "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=400&h=400&fit=crop",
-            "Group without Masks": "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=400&fit=crop"
-        }
+            "Person with Mask 1": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTWwQ6jE_EqlxcRKiul8gW4U_LJ6kqBNtPNuQ&s",
+            "Person with Mask 2": "https://sabimages.com/wp-content/uploads/2024/08/mask-girl-pic2.jpg",
+           "Person without Mask 1": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+           "Person without Mask 3": "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=400&h=400&fit=crop",
+           }
         
         # Create rows with 2 images each
         for i in range(0, len(sample_images), 2):
