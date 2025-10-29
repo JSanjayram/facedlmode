@@ -55,35 +55,13 @@ def process_frame(frame, model, face_cascade):
 
 def resize_image_to_standard(image, standard_size=(400, 400)):
     """Resize image to standard size while maintaining aspect ratio"""
-    try:
-        if isinstance(image, np.ndarray):
-            image = Image.fromarray(image)
-        
-        # Calculate aspect ratio
-        aspect = image.width / image.height
-        
-        if aspect > 1:
-            # Width is larger
-            new_width = standard_size[0]
-            new_height = int(standard_size[0] / aspect)
-        else:
-            # Height is larger
-            new_height = standard_size[1]
-            new_width = int(standard_size[1] * aspect)
-            
-        # Resize image
-        image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
-        
-        # Create new image with padding
-        new_image = Image.new("RGB", standard_size, (255, 255, 255))
-        paste_x = (standard_size[0] - new_width) // 2
-        paste_y = (standard_size[1] - new_height) // 2
-        new_image.paste(image, (paste_x, paste_y))
-        
-        return new_image
-    except Exception as e:
-        st.error(f"Error resizing image: {str(e)}")
-        return image
+    if isinstance(image, np.ndarray):
+        image = Image.fromarray(image)
+    image.thumbnail(standard_size, Image.Resampling.LANCZOS)
+    new_image = Image.new("RGB", standard_size, (255, 255, 255))
+    new_image.paste(image, ((standard_size[0] - image.size[0]) // 2,
+                           (standard_size[1] - image.size[1]) // 2))
+    return new_image
 
 def main():
     # Hide all Streamlit UI elements
@@ -225,13 +203,13 @@ def main():
         
         # Sample mask detection images
         sample_images = {
-            "Person with Mask 1": "https://www.cdc.gov/coronavirus/2019-ncov/images/mask-emoji.jpg",
-            "Person with Mask 2": "https://www.cdc.gov/coronavirus/2019-ncov/images/mask-people.jpg",
-            "Person without Mask 1": "https://media.istockphoto.com/id/1288103838/photo/young-man-photographed-for-identity-card.jpg",
-            "Person without Mask 2": "https://media.istockphoto.com/id/1288103838/photo/young-man-photographed-for-identity-card.jpg"
-        }
+            "Person with Mask 1": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTWwQ6jE_EqlxcRKiul8gW4U_LJ6kqBNtPNuQ&s",
+            "Person with Mask 2": "https://sabimages.com/wp-content/uploads/2024/08/mask-girl-pic2.jpg",
+           "Person without Mask 1": "https://i.pinimg.com/474x/91/2f/30/912f3000d0908eb760d10425d1bd93c6.jpg",
+           "Person without Mask 2": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTJQ16NV6SQSO7gtDmnpMfB0bXqr2tTNHunPQ&s",
+           }
         
-        # Update image loading with better error handling
+        # Create rows with 2 images each
         for i in range(0, len(sample_images), 2):
             cols = st.columns(2)
             
@@ -240,33 +218,30 @@ def main():
                     name, url = list(sample_images.items())[i + j]
                     with cols[j]:
                         try:
-                            response = requests.get(url, timeout=5)
-                            if response.status_code == 200:
-                                image = Image.open(io.BytesIO(response.content))
-                                resized_image = resize_image_to_standard(image)
-                                st.image(resized_image, caption=name, use_column_width=True)
+                            import requests
+                            image = Image.open(requests.get(url, stream=True).raw)
+                            resized_image = resize_image_to_standard(image)
+                            st.image(resized_image, caption=name, width=400)
+                            
+                            if st.button(f"Test {name}", key=f"sample_{i+j}", use_container_width=True):
+                                image_np = np.array(image)
+                                if len(image_np.shape) == 3:
+                                    image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
                                 
-                                if st.button(f"Test {name}", key=f"sample_{i+j}", use_container_width=True):
-                                    image_np = np.array(image)
-                                    if len(image_np.shape) == 3:
-                                        image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
-                                    
-                                    processed_image = process_frame(image_np, model, face_cascade)
-                                    processed_image = cv2.cvtColor(processed_image, cv2.COLOR_BGR2RGB)
-                                    
-                                    st.markdown("---")
-                                    col1, col2 = st.columns(2)
-                                    with col1:
-                                        st.subheader("Original")
-                                        st.image(resized_image, width=400)
-                                    with col2:
-                                        st.subheader("Detection Result")
-                                        processed_resized = resize_image_to_standard(Image.fromarray(processed_image))
-                                        st.image(processed_resized, width=400)
-                            else:
-                                st.error(f"Failed to load {name}: HTTP {response.status_code}")
-                        except Exception as e:
-                            st.error(f"Error loading {name}: {str(e)}")
+                                processed_image = process_frame(image_np, model, face_cascade)
+                                processed_image = cv2.cvtColor(processed_image, cv2.COLOR_BGR2RGB)
+                                
+                                st.markdown("---")
+                                col1, col2 = st.columns(2)
+                                with col1:
+                                    st.subheader("Original")
+                                    st.image(resized_image, width=400)
+                                with col2:
+                                    st.subheader("Detection Result")
+                                    processed_resized = resize_image_to_standard(Image.fromarray(processed_image))
+                                    st.image(processed_resized, width=400)
+                        except:
+                            st.error(f"Failed to load {name}")
     
     with tab2:
         uploaded_file = st.file_uploader("Choose an image", type=['jpg', 'jpeg', 'png'])
